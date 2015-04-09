@@ -1,0 +1,186 @@
+Mesh teapot
+{
+    filename = teapot.3ds 0
+}
+
+Mesh dolphin
+{
+    filename = dolphin.3ds 2
+}
+
+Material diffuse_white
+{
+    diffuse = 0.9 0.9 0.9
+}
+
+Material diffuse_green
+{
+    diffuse = 0.2 1.0 0.2
+}
+
+Material diffuse_yellow
+{
+    diffuse = 0.7 0.7 0.2
+}
+
+Material diffuse_orange
+{
+    diffuse = 0.9 0.5 0.2
+}
+
+Material plastic_red
+{
+    diffuse = 0.8 0.1 0.1
+    specular = 2.0 2.0 2.0
+    shininess = 50.0
+    reflective_color = 0.1 0.1 0.1
+}
+
+Material plastic_purple
+{
+    diffuse = 0.6 0.1 0.6
+    specular = 2.0 2.0 2.0
+    shininess = 50.0
+    reflective_color = 0.1 0.1 0.1
+}
+
+Material plastic_blue
+{
+    diffuse = 0.1 0.1 0.8
+    specular = 2.0 2.0 2.0
+    shininess = 50.0
+    reflective_color = 0.1 0.1 0.1
+}
+
+Material metal
+{
+    diffuse = 0.05 0.05 0.05
+    specular = 0.5 0.5 0.5
+    shininess = 50.0
+    reflective_color = 0.8 0.8 0.8
+}
+
+Material glass
+{
+    specular = 0.3 0.3 0.3
+    shininess = 100.0
+    refractive_index = 0.7
+    refractive_color = 0.96 0.96 0.99
+}
+
+Model
+{
+    object = teapot
+    scale = 0.06 0.06 0.06
+    position = -1.0 -0.05 8.0
+    orientation = -90.0 0.0 0.0
+    material = metal
+}
+
+Model
+{
+    object = sphere
+    scale = 1.0 1.0 1.0
+    position = -1.0 -2.0 8.0
+    material = metal
+}
+
+Model
+{
+    object = sphere
+    scale = 0.5 0.5 0.5
+    position = -1.0 -0.5 8.0
+    material = diffuse_white
+}
+
+Model
+{
+    object = sphere
+    scale = 0.5 0.5 0.5
+    position = 2.0 -1.5 8.0
+    material = plastic_red
+}
+
+Model
+{
+    object = sphere
+    scale = 0.4 0.4 0.4
+    position = 2.0 -0.6 8.0
+    material = plastic_purple
+}
+
+Model
+{
+    object = sphere
+    scale = 0.3 0.3 0.3
+    position = 2.0 0.1 8.0
+    material = plastic_blue
+}
+
+Model
+{
+    object = plane
+    scale = 6.0 4.0 1.0
+    position = 0.0 0.0 10.0
+    orientation = 0.0 0.0 0.0
+    material = diffuse_yellow
+}
+
+Model
+{
+    object = plane
+    scale = 12.0 4.0 1.0
+    position = -3.0 0.0 4.0
+    orientation = 0.0 -90.0 0.0
+    material = diffuse_green
+}
+
+Model
+{
+    object = plane
+    scale = 12.0 4.0 1.0
+    position = 3.0 0.0 4.0
+    orientation = 0.0 90.0 0.0
+    material = diffuse_orange
+}
+
+Model
+{
+    object = plane
+    scale = 6.0 12.0 1.0
+    position = 0.0 -2.0 4.0
+    orientation = 90.0 0.0 0.0
+    material = metal
+}
+
+Model
+{
+    object = plane
+    scale = 6.0 12.0 1.0
+    position = 0.0 2.0 4.0
+    orientation = -90.0 0.0 0.0
+    material = diffuse_white
+}
+
+Model
+{
+    object = dolphin
+    scale = 0.008 0.008 0.008
+    position = -0.5 -0.13 5.0
+    orientation = -20.0 10.0 -40.0
+    material = glass
+}
+
+Model
+{
+    object = sphere
+    scale = 0.25 0.25 0.25
+    position = 0.5 -1.75 5.0
+    material = glass
+}
+
+Light
+{
+    position = 0.0 1.0 3.0
+    color = 1.0 1.0 1.0
+}
