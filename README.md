@@ -30,4 +30,6 @@ Libraries used:
 - glm (of course it is used, http://glm.g-truc.net)
 - L3DS (http://is.muni.cz/th/98745/fi_m/Calligraphy/l3ds/docs/index.html)
 
+Models were taken from: http://pascal.leynaud.free.fr/3ds/
+
 Project is now supported as Visual Studio solution
