@@ -3,24 +3,6 @@
 
 using namespace glm;
 
-inline double FrenselReflectance(double ci, double n)
-{
-    if ((1.0 - ci*ci)/n/n >= 1.0)
-        return 1.0;
-
-    //Frensel equations
-    double ci2 = ci * ci;
-    double si2 = 1.0f - ci2;
-    double si4 = si2 * si2;
-    double a = ci2 + n * n - 1.0f;
-    double sqa = 2 * sqrt(a) * ci;
-    double b = ci2 + a;
-    double c = ci2 * a + si4;
-    double d = sqa * si2;
-    double reflectance = (b - sqa) / (b + sqa) * (1.0 + (c - d) / (c + d)) * 0.5;
-    return clamp(reflectance, 0.0, 1.0);
-}
-
 Ray RayTracer::MakeRay(uvec2 pixelPos)
 {
     dvec3 localDirection;
@@ -67,7 +49,9 @@ glm::dvec3 RayTracer::TraceRay(Ray ray, int step = 0)
 
     double k = intersectedModel->material->refractive_index;
     if (intersection.face_side < 0) k = 1.0 / k;
-    double R = FrenselReflectance(abs(dot(ray.direction, intersection.normal)), 1.0 / k);
+    double R = intersectedModel->material->FrenselReflectance(
+        normalizeDot(-ray.direction, intersection.normal)
+        );
     double T = 1.0 - R;
 
     dvec3 reflective_color = intersectedModel->material->refractive_color * R +

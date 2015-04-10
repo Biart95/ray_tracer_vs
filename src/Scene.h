@@ -6,6 +6,13 @@
 #include <map>
 #include <memory>
 
+/*
+    Scene.h
+    Scene that contains all rendered objects 
+    and other stuff such as lights, cameras, e.t.c
+    Author: Artyom Bishev
+*/
+
 class Scene
 {
 public:

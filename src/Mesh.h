@@ -2,7 +2,7 @@
 
 /*
     Mesh.h
-    Defines 3D models as they are represented in RayTracer
+    Defines polygonal 3D models as they are represented in RayTracer
     Author: Artyom Bishev
 */
 

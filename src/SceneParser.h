@@ -1,10 +1,17 @@
 #pragma once
 
+/*
+    SceneParsing.h
+    Contains scene loader
+    Author: Artyom Bishev
+*/
+
 #include "Scene.h"
 #include <string>
 #include <fstream>
 #include <exception>
 #include "Material.h"
+
 class SyntaxError : std::exception
 {
 public:
@@ -16,6 +23,7 @@ public:
     std::string msg;
 };
 
+// This class provides methods for reading 3D scenes from file
 class SceneParser
 {
 private:
@@ -26,6 +34,7 @@ public:
     ~SceneParser() {}
     SceneParser() {}
 
+    // Load scene from file to Scene*
     void Parse(const std::string& arg_filename, Scene* arg_scene);
 
 private:

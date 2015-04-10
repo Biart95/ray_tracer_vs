@@ -1,11 +1,18 @@
 #pragma once
 
+/*
+    Randerer.h
+    Contains definitions of renderers used in the program 
+    Author: Artyom Bishev
+*/
+
 #include "glm/glm.hpp"
 #include "Types.h"
 #include "Scene.h"
 
 #include "string"
 
+// Base class for renderers
 class Renderer
 {
 public:
@@ -18,6 +25,9 @@ public:
     virtual ~Renderer() {};
 };
 
+// Ray tracer renderer
+// renders scene in the internal buffer 
+// realistic and not realtime sort of renderer
 class RayTracer : public Renderer
 {
 public:

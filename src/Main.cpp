@@ -10,7 +10,7 @@ void main(int argc, char** argv)
     SceneParser parser;
     parser.Parse("scene.txt", &scene);
 
-    glm::uvec2 resolution = glm::uvec2(1024, 768);  // Default resolution
+    glm::uvec2 resolution = glm::uvec2(512, 384);  // Default resolution
 
     if(argc == 2) // There is input file in parameters
     {

@@ -1,5 +1,11 @@
 #pragma once
 
+/*
+    Types.h
+    Common types used in RayTracer
+    Author: Artyom Bishev
+*/
+
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
 #include "vector"

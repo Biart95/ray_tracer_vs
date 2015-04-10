@@ -1,8 +1,15 @@
 #pragma once
 
+/*
+    Mesh.h
+    Defines several classes of 3D shapes
+    Author: Artyom Bishev
+*/
+
 #include "Types.h"
 #include "Material.h"
 
+// Base class for any renderable 3D object in scene
 class Object3D
 {
 public:
@@ -11,6 +18,7 @@ public:
     virtual ~Object3D() {};
 };
 
+// Sphere
 class Sphere : public Object3D
 {
 public:
@@ -19,6 +27,7 @@ public:
     virtual ~Sphere() {}
 };
 
+// Plane
 class Plane : public  Object3D
 {
 public:
