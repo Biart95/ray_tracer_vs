@@ -9,7 +9,9 @@
 #include "Types.h"
 #include "Material.h"
 
-// Base class for any renderable 3D object in scene
+/*
+    Base class for any renderable 3D shape in scene
+*/
 class Object3D
 {
 public:
@@ -17,6 +19,12 @@ public:
     virtual Intersection Intersect(const Ray& ray) const = 0;
     virtual ~Object3D() {};
 };
+
+
+
+/*
+    Basic analytic shapes
+*/
 
 // Sphere
 class Sphere : public Object3D
@@ -38,8 +46,8 @@ public:
 
 // This function implements Muller-Trumbore algorithm 
 // for finding ray-triangle intersections
-inline Intersection IntersectTriangle(const Ray& ray, 
-    glm::dvec3 x , glm::dvec3 y , glm::dvec3 z , // coordinates
+inline Intersection IntersectTriangle(const Ray& ray,
+    glm::dvec3 x, glm::dvec3 y, glm::dvec3 z, // coordinates
     glm::dvec3 nx, glm::dvec3 ny, glm::dvec3 nz // normals
     )
 {
@@ -91,8 +99,26 @@ inline Intersection IntersectTriangle(const Ray& ray,
     return intersection;
 }
 
-// 3D model with specified location and orientation and specified material
-// Stores a pointer to the corresponding 3D object
+// Triangle (or polygon)
+class Poly : public Object3D
+{
+public:
+    glm::dvec3 vertices[3];
+    glm::dvec3 normals[3];
+    Intersection Intersect(const Ray& ray) const
+    {
+        return ::IntersectTriangle(ray,
+            vertices[0], vertices[1], vertices[2],
+            normals[0], normals[1], normals[2]
+            );
+    }
+};
+
+
+/*
+    3D model with specified location and orientation and specified material
+    Stores a pointer to the corresponding 3D shape
+*/
 struct Model
 {
     const Object3D* object;

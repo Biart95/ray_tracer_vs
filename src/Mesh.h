@@ -32,25 +32,11 @@ inline std::ostream& operator<<(std::ostream& out, const glm::dvec3& vec)
     return out << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
 }
 
-class Poly : public Object3D
-{
-public:
-    glm::dvec3 vertices[3];
-    glm::dvec3 normals[3];
-    Intersection Intersect(const Ray& ray) const
-    {
-        return ::IntersectTriangle(ray,
-            vertices[0], vertices[1], vertices[2],
-            normals[0], normals[1], normals[2]
-            );
-    }
-};
-
 bool PolyInBox(const Poly& poly, const BoundingBox& bounding_box);
 
-struct MeshQuadTreeNode
+struct MeshOctreeNode
 {
-    std::vector<MeshQuadTreeNode> subtrees;
+    std::vector<MeshOctreeNode> subtrees;
     std::vector<Poly> triangles;
     void AddPoly(const Poly& poly, const BoundingBox& bounding_box)
     {
@@ -119,13 +105,20 @@ struct MeshQuadTreeNode
 class Mesh : public Object3D
 {
 public:
+    // Load mesh from .3ds
     bool LoadFromFile(const std::string& filename, int mesh_name = 0);
+
     Intersection Intersect(const Ray& ray) const
     {
         if (!bounding_box.Intersect(ray))
             return Intersection();
         return root_node->Intersect(ray, bounding_box);
     }
+
+	Mesh() {};
+	~Mesh() {};
+
+private:
     void AddPoly(const Poly& poly)
     {
         assert(root_node);
@@ -134,12 +127,7 @@ public:
         ++triangles_count;
     }
 
-
-	Mesh() {};
-	~Mesh() {};
-
-private:
     BoundingBox bounding_box;
-    std::unique_ptr<MeshQuadTreeNode> root_node;
+    std::unique_ptr<MeshOctreeNode> root_node;
     int triangles_count;
 };

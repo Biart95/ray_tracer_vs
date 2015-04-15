@@ -42,8 +42,8 @@ bool Mesh::LoadFromFile(const std::string& filename, int mesh_name)
         }
     }
 
-    // Load mesh data to quad tree
-    root_node = std::make_unique<MeshQuadTreeNode>();
+    // Load mesh data to octree
+    root_node = std::make_unique<MeshOctreeNode>();
     for (unsigned j = 0; j < mesh.GetTriangleCount(); j++)
     {
         AddPoly(LTriangle2ToPoly(mesh.GetTriangle2(j)));
