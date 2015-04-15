@@ -16,7 +16,6 @@ Just ready for release (can be seen on the images shown in img/):
 - Simple shadows
 - Simple global illumination using photon maps
 - Extended material features, some texturing
-- A bit more realistic illumination by distant light sources
 
 In the nearest future:
 - Mixing with backtracing techniques + extended photon maps
