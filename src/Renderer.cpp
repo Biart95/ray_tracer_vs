@@ -97,7 +97,7 @@ void RayTracer::Render(uvec2 res)
         for (int j = 0; j < resolution.x; j++)
         {
             Ray ray = MakeRay(uvec2(j, i));
-            pixels[i * resolution.x + j] = TraceRay(ray);
+            pixels[i * resolution.x + j] = GammaCompression(TraceRay(ray));
         }
     }
 }

@@ -31,24 +31,24 @@ Material diffuse_orange
 Material plastic_red
 {
     diffuse = 0.8 0.1 0.1
-    specular = 2.0 2.0 2.0
-    shininess = 50.0
+    specular = 10.0 10.0 10.0
+    shininess = 300.0
     reflective_color = 0.1 0.1 0.1
 }
 
 Material plastic_purple
 {
     diffuse = 0.6 0.1 0.6
-    specular = 2.0 2.0 2.0
-    shininess = 50.0
+    specular = 10.0 10.0 10.0
+    shininess = 300.0
     reflective_color = 0.1 0.1 0.1
 }
 
 Material plastic_blue
 {
     diffuse = 0.1 0.1 0.8
-    specular = 2.0 2.0 2.0
-    shininess = 50.0
+    specular = 10.0 10.0 10.0
+    shininess = 300.0
     reflective_color = 0.1 0.1 0.1
 }
 
@@ -62,8 +62,8 @@ Material metal
 
 Material glass
 {
-    specular = 0.3 0.3 0.3
-    shininess = 100.0
+    specular = 3.0 3.0 3.0
+    shininess = 1000.0
     refractive_index = 0.7
     refractive_color = 0.96 0.96 0.99
 }
@@ -189,5 +189,5 @@ Model
 Light
 {
     position = 0.0 1.0 3.0
-    color = 1.0 1.0 1.0
+    color = 5.0 5.0 5.0
 }

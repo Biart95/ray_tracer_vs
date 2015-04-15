@@ -25,7 +25,8 @@ public:
     {
         if (glm::length(diffuse) < FLT_EPSILON)
             return glm::dvec3(0.0f);
-        double intensity = glm::dot(s.normal, glm::normalize(light.center - s.coord));
+        double dist = glm::distance(light.center, s.coord);
+        double intensity = glm::dot(s.normal, (light.center - s.coord) / glm::pow3(dist));
         if (intensity < FLT_EPSILON)
             return glm::dvec3(0.0f);
         return light.color * diffuse * intensity;
@@ -36,11 +37,12 @@ public:
     {
         if (glm::length(specular) < FLT_EPSILON)
             return glm::dvec3(0.0f);
-        glm::dvec3 reflected = glm::reflect(glm::normalize(light.center - s.coord), s.normal);
+        double dist = glm::distance(light.center, s.coord);
+        glm::dvec3 reflected = glm::reflect((light.center - s.coord) / dist, s.normal);
         double intensity = glm::dot(glm::normalize(ray.direction), reflected);
         if (intensity < FLT_EPSILON)
             return glm::dvec3(0.0f);
-        return light.color * specular * glm::pow(intensity, shininess);
+        return light.color * specular * glm::pow(intensity, shininess) / glm::pow2(dist);
     }
 
     // Calculate percentage of reflected energy (opposite to the amount of refracted energy) 

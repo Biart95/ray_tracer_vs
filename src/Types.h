@@ -80,3 +80,8 @@ struct BoundingBox
         return glm::max(tMin.x, tMin.y, tMin.z) < glm::min(tMax.x, tMax.y, tMax.z);
     }
 };
+
+inline glm::dvec3 GammaCompression(glm::dvec3 physical_color, double gamma = 2.1)
+{
+    return glm::pow(physical_color, glm::dvec3(1 / gamma));
+}
