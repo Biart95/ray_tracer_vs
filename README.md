@@ -9,9 +9,10 @@ Available features in this release:
  - Diffuse/Phong shading, reflection and refraction by Frensel formulas
  - OpenMP simple parallelization
  - Instancing
+ - Octree for meshes
 
 Just ready for release (can be seen on the images shown in img/):
-- Octree for meshes
+
 - Simple shadows
 - Simple global illumination using photon maps
 - Extended material features, some texturing
