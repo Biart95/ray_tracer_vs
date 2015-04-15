@@ -12,6 +12,7 @@
 #include "Object3D.h"
 #include "L3DS\l3ds.h"
 #include <vector>
+#include <memory>
 #include <string>
 #include <iostream>
 
@@ -31,27 +32,114 @@ inline std::ostream& operator<<(std::ostream& out, const glm::dvec3& vec)
     return out << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
 }
 
+class Poly : public Object3D
+{
+public:
+    glm::dvec3 vertices[3];
+    glm::dvec3 normals[3];
+    Intersection Intersect(const Ray& ray) const
+    {
+        return ::IntersectTriangle(ray,
+            vertices[0], vertices[1], vertices[2],
+            normals[0], normals[1], normals[2]
+            );
+    }
+};
+
+bool PolyInBox(const Poly& poly, const BoundingBox& bounding_box);
+
+struct MeshQuadTreeNode
+{
+    std::vector<MeshQuadTreeNode> subtrees;
+    std::vector<Poly> triangles;
+    void AddPoly(const Poly& poly, const BoundingBox& bounding_box)
+    {
+        glm::dvec3 center = glm::mix(bounding_box.bounds[0], bounding_box.bounds[1], 0.5);
+        for (int i = 0; i < 8; ++i)
+        {
+            BoundingBox subbox = bounding_box;
+            for (int j = 0; j < 3; ++j)
+            {
+                subbox.bounds[(i >> j) & 1][j] = center[j];
+            }
+            if (PolyInBox(poly, subbox))
+            {
+                if (subtrees.empty())
+                    subtrees.resize(8);
+                subtrees[i].AddPoly(poly, subbox);
+                return;
+            }
+        }
+        triangles.push_back(poly);
+    }
+    Intersection Intersect(const Ray& ray, const BoundingBox& bounding_box)
+    {
+        Intersection intersection;
+        for (const auto& poly : triangles)
+        {
+            auto current_intersection = poly.Intersect(ray);
+            if (current_intersection && current_intersection.distance >= TRACER_EPSILON)
+            {
+                if (!intersection || current_intersection.distance < intersection.distance)
+                {
+                    intersection = current_intersection;
+                }
+            }
+        }
+
+        if (subtrees.empty())
+            return intersection;
+
+        glm::dvec3 center = glm::mix(bounding_box.bounds[0], bounding_box.bounds[1], 0.5);
+        for (int i = 0; i < 8; ++i)
+        {
+            BoundingBox subbox = bounding_box;
+            for (int j = 0; j < 3; ++j)
+            {
+                subbox.bounds[(i >> j) & 1][j] = center[j];
+            }
+            if (subbox.Intersect(ray))
+            {
+                auto current_intersection = subtrees[i].Intersect(ray, subbox);
+                if (current_intersection)
+                {
+                    if (!intersection || current_intersection.distance < intersection.distance)
+                    {
+                        intersection = current_intersection;
+                    }
+                }
+            }
+        }
+
+        return intersection;
+    }
+};
+
 // 3D mesh of polygonal object
 class Mesh : public Object3D
 {
 public:
-    std::vector<glm::uvec3> indices;
-    std::vector<glm::dvec3> vertices;
-    std::vector<glm::dvec3> normals;
-    BoundingBox boundingBox;
-
     bool LoadFromFile(const std::string& filename, int mesh_name = 0);
-    Intersection Intersect(const Ray& ray) const;
+    Intersection Intersect(const Ray& ray) const
+    {
+        if (!bounding_box.Intersect(ray))
+            return Intersection();
+        return root_node->Intersect(ray, bounding_box);
+    }
+    void AddPoly(const Poly& poly)
+    {
+        assert(root_node);
+        assert(PolyInBox(poly, bounding_box));
+        root_node->AddPoly(poly, bounding_box);
+        ++triangles_count;
+    }
+
 
 	Mesh() {};
 	~Mesh() {};
 
 private:
-	Intersection IntersectTriangle(const Ray& ray, glm::uvec3 indices) const
-	{  
-        return ::IntersectTriangle(ray, 
-            vertices[indices.x], vertices[indices.y], vertices[indices.z],
-            normals[indices.x], normals[indices.y], normals[indices.z]
-            );  
-	}
+    BoundingBox bounding_box;
+    std::unique_ptr<MeshQuadTreeNode> root_node;
+    int triangles_count;
 };

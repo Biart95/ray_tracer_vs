@@ -1,5 +1,16 @@
 #include "Mesh.h"
 
+Poly LTriangle2ToPoly(const Loader3ds::LTriangle2& tri)
+{
+    Poly poly;
+    for (int k = 0; k < 3; ++k)
+    {
+        poly.vertices[k] = LVectorTodvec3(tri.vertices[k]);
+        poly.normals[k] = LVectorTodvec3(tri.vertexNormals[k]);
+    }
+    return poly;
+}
+
 bool Mesh::LoadFromFile(const std::string& filename, int mesh_name)
 {
     std::cout << "Loading model: \"" << filename << "\"\n";
@@ -10,70 +21,50 @@ bool Mesh::LoadFromFile(const std::string& filename, int mesh_name)
         return false;
     }
 
-    int countOfMeshes = loader.GetMeshCount();
-    std::cout << "Number of meshes: " << countOfMeshes << "\n";
-    int polygonsCount = 0;
-    int verticesCount = 0;
+    int count_of_meshes = loader.GetMeshCount();
+    std::cout << "Number of meshes: " << count_of_meshes << "\n";
+    triangles_count = 0;
 
     Loader3ds::LMesh& mesh = loader.GetMesh(mesh_name);
-    // Load vertex data
-    int currentCountOfVertices = mesh.GetVertexCount();
-    for (int j = 0; j < currentCountOfVertices; ++j)
+
+    // Obtain bounding box
+    for (int j = 0; j < mesh.GetVertexCount(); ++j)
     {
-        const Loader3ds::LVector4& lvert = mesh.GetVertex(j);
-        glm::dvec3 coord = LVectorTodvec3(lvert);
+        glm::dvec3 coord = LVectorTodvec3(mesh.GetVertex(j));
         if (j == 0)
         {
-            boundingBox.lowerBound = boundingBox.upperBound = coord;
+            bounding_box.bounds[0] = bounding_box.bounds[1] = coord;
         }
         for (int k = 0; k < 3; k++)
         {
-            boundingBox.lowerBound[k] = glm::min(coord[k], boundingBox.lowerBound[k]);
-            boundingBox.upperBound[k] = glm::max(coord[k], boundingBox.upperBound[k]);
+            bounding_box.bounds[0][k] = glm::min(coord[k], bounding_box.bounds[0][k]);
+            bounding_box.bounds[1][k] = glm::max(coord[k], bounding_box.bounds[1][k]);
         }
-        vertices.emplace_back(coord);
-        normals.emplace_back(LVectorTodvec3(mesh.GetNormal(j)));
     }
 
-    // Load indices data
-    unsigned currentCountOfTriangles = mesh.GetTriangleCount();
-    for (unsigned j = 0; j < currentCountOfTriangles; j++)
+    // Load mesh data to quad tree
+    root_node = std::make_unique<MeshQuadTreeNode>();
+    for (unsigned j = 0; j < mesh.GetTriangleCount(); j++)
     {
-        indices.emplace_back(
-            mesh.GetTriangle(j).a,
-            mesh.GetTriangle(j).b,
-            mesh.GetTriangle(j).c
-            );
+        AddPoly(LTriangle2ToPoly(mesh.GetTriangle2(j)));
     }
-    verticesCount += currentCountOfVertices;
-    polygonsCount += currentCountOfTriangles;
 
-    std::cout << "Model was successfully loaded. Number of polys: " << polygonsCount << std::endl;
+    std::cout << "Model was successfully loaded. Number of polys: " << triangles_count << std::endl;
     return true;
 }
 
-Intersection Mesh::Intersect(const Ray& ray) const
+bool PolyInBox(const Poly& poly, const BoundingBox& bounding_box)
 {
-	if (!boundingBox.Intersect(ray))
-	{	
-		return Intersection();
-	}
-
-    Intersection intersection;
-    for (auto poly : indices)
+    for (const auto& v : poly.vertices)
     {
-        Intersection currentPolyIntersection = IntersectTriangle(ray, poly);
-
-        if (currentPolyIntersection && currentPolyIntersection.distance >= TRACER_EPSILON)
+        for (int k = 0; k < 3; ++k)
         {
-            if (
-                !intersection ||
-                intersection.distance > currentPolyIntersection.distance
-                )
+            if (v[k] > bounding_box.bounds[1][k] ||
+                v[k] < bounding_box.bounds[0][k])
             {
-                intersection = currentPolyIntersection;
+                return false;
             }
         }
     }
-    return intersection;
+    return true;
 }

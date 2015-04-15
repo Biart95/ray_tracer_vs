@@ -65,16 +65,16 @@ struct Light
 
 struct BoundingBox
 {
-    glm::dvec3 lowerBound;
-    glm::dvec3 upperBound;
+    glm::dvec3 bounds[2];
     bool Intersect(const Ray& ray) const
     {
         glm::dvec3 tMin, tMax;
         for (int k = 0; k < 3; k++)
         {
-            tMin[k] = (lowerBound[k] - ray.origin[k]) / ray.direction[k];
-            tMax[k] = (upperBound[k] - ray.origin[k]) / ray.direction[k];
+            tMin[k] = (bounds[0][k] - ray.origin[k]) / ray.direction[k];
+            tMax[k] = (bounds[1][k] - ray.origin[k]) / ray.direction[k];
             if (ray.direction[k] < 0) std::swap(tMin[k], tMax[k]);
+            if (tMax[k] < 0) return false;
         }
 
         return glm::max(tMin.x, tMin.y, tMin.z) < glm::min(tMax.x, tMax.y, tMax.z);
