@@ -1,0 +1,8 @@
+/Debug
+/models
+/Release
+/*.sdf
+/*.opensdf
+/*.png
+/*.bmp
+/*.tga
