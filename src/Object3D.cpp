@@ -19,9 +19,6 @@ Intersection Model::Intersect(const Ray& ray, bool inverted) const
     intersection.normal = glm::normalize(GetNormalMatrix() * intersection.normal);
     intersection.distance = glm::length2(intersection.coord - ray.origin);
 
-    // If the intersection is too close to the ray origin, discard it
-    if (intersection.distance < TRACER_EPSILON) return Intersection();
-
     // Set intersection material
     intersection.material = surface_material;
 

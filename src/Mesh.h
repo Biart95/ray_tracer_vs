@@ -65,7 +65,7 @@ struct MeshOctreeNode
         for (const auto& poly : triangles)
         {
             auto current_intersection = poly.Intersect(ray, inverted);
-            if (current_intersection && current_intersection.distance >= TRACER_EPSILON)
+            if (current_intersection)
             {
                 if (!intersection || current_intersection.distance < intersection.distance)
                 {

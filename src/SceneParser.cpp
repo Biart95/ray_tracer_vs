@@ -5,11 +5,6 @@ void SceneParser::Parse(const std::string& arg_filename, Scene* arg_scene)
     fin.open(arg_filename);
     scene = arg_scene;
 
-    scene->surfaces["sphere"] = std::make_unique<Sphere>();
-    scene->surfaces["plane"] = std::make_unique<Plane>();
-    scene->surface_materials["default"] = std::make_unique<SurfaceMaterial>();
-    scene->inside_materials["default"] = std::make_unique<InsideMaterial>();
-
     while (fin)
     {
         ParseEntity();

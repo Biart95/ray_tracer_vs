@@ -8,34 +8,43 @@
     Author: Artyom Bishev
 */
 
-// Absolutely empty surface
-class EmptySurface : public Surface
-{
-public:
-    EmptySurface() {}
-    virtual Intersection Intersect(const Ray& ray, bool inverted = false) const override
-    {
-        return Intersection();
-    }
-    virtual ~EmptySurface() {}
-};
-
 // Sphere
 class Sphere : public Surface
 {
 public:
     Sphere() {}
-    virtual Intersection Intersect(const Ray& ray, bool inverted = false) const override;
-    virtual ~Sphere() {}
-};
+    virtual Intersection Sphere::Intersect(const Ray& ray, bool inverted) const override
+    {
+        float a = glm::dot(ray.direction, ray.direction);
+        float b = glm::dot(ray.direction, ray.origin);
+        float c = glm::dot(ray.origin, ray.origin) - 1.0;
+        float D = b * b - a * c;
+        if (D < 0.0f)
+            return Intersection();
 
-// Plane
-class Plane : public Surface
-{
-public:
-    Plane() {}
-    virtual Intersection Intersect(const Ray& ray, bool inverted = false) const override;
-    virtual ~Plane() {}
+        Intersection intersection;
+        intersection.is_intersected = true;
+        double t;
+
+        // Smaller root of quadratic equation
+        t = (-b - sqrt(D)) / a;
+        intersection.coord = ray.origin + ray.direction * t;
+        if (t > 0.0)
+        {
+            intersection.normal = glm::normalize(intersection.coord);
+            if (!inverted) return intersection;
+        }
+        // Bigger root of quadratic equation
+        t = (-b + sqrt(D)) / a;
+        intersection.coord = ray.origin + ray.direction * t;
+        if (t > 0.0)
+        {
+            intersection.normal = glm::normalize(intersection.coord);
+            if (inverted) return intersection;
+        }
+        return Intersection();
+    }
+    virtual ~Sphere() {}
 };
 
 // This function implements Muller-Trumbore algorithm 
@@ -92,6 +101,44 @@ inline Intersection IntersectTriangle(const Ray& ray,
     intersection.distance = glm::length2(intersection.coord - ray.origin);
     return intersection;
 }
+
+
+// Plane
+class Plane : public Surface
+{
+public:
+    Plane() {}
+    virtual Intersection Plane::Intersect(const Ray& ray, bool inverted) const override
+    {
+        Intersection intersection;
+        glm::dvec3 vertices[4] = {
+            glm::dvec3(-0.5, -0.5, 0.0),
+            glm::dvec3(-0.5, 0.5, 0.0),
+            glm::dvec3(0.5, 0.5, 0.0),
+            glm::dvec3(0.5, -0.5, 0.0)
+        };
+        glm::dvec3 normal = glm::dvec3(0.0, 0.0, -1.0);
+
+        // First triangle
+        intersection = IntersectTriangle(ray,
+            vertices[0], vertices[1], vertices[2],
+            normal, normal, normal
+            );
+        // Second triangle
+        if (!intersection)
+        {
+            intersection = IntersectTriangle(ray,
+                vertices[0], vertices[2], vertices[3],
+                normal, normal, normal
+                );
+        }
+
+        if ((glm::dot(ray.direction, intersection.normal) > 0.0) != inverted)
+            return Intersection();
+        return intersection;
+    }
+    virtual ~Plane() {}
+};
 
 // Triangle (or polygon)
 class Poly : public Surface

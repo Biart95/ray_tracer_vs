@@ -27,13 +27,17 @@ struct Intersection
 
 /*
     Base class for any intersectable 3D shape in scene
+    Objects of this class represent absolutely empty surfaces
 */
 class Surface
 {
 public:
     Surface() {}
-    virtual Intersection Intersect(const Ray& ray, bool inverted = false) const = 0;
-    virtual ~Surface() {};
+    virtual Intersection Intersect(const Ray& ray, bool inverted = false) const
+    {
+        return Intersection();
+    }
+    virtual ~Surface() {}
 };
 
 
