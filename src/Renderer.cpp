@@ -9,7 +9,9 @@ Ray RayTracer::MakeRay(uvec2 pixelPos)
     localDirection.x = (pixelPos.x - resolution.x / 2.0f) / resolution.x;
 	localDirection.y = (pixelPos.y - resolution.y / 2.0f) / resolution.x;
     localDirection.z = 0.5f / atan(camera.viewAngle / 2.0f);
-    return Ray(camera.position, camera.GetRotateMatrix() * localDirection);
+    Ray ray(camera.position, camera.GetRotateMatrix() * localDirection);
+    ray.current_object_insides.push(&scene->empty_object);
+    return ray;
 }
 
 glm::dvec3 RayTracer::TraceRay(Ray ray, int step = 0)
@@ -17,46 +19,83 @@ glm::dvec3 RayTracer::TraceRay(Ray ray, int step = 0)
 	// Check whether recursive tracing is too deep to proceed calculations
     if (step >= maxRenderStep)
         return backgroundColor;
+
 	// Find the nearest intersection of the ray and the scene
     Intersection intersection;
-    Model* intersectedModel = nullptr;
-    for (auto& model : scene->models)
+    Object3D* intersected_object = nullptr;
+    for (auto& object : scene->objects)
     {
-        Intersection currentIntersection = model.Intersect(ray);
+        bool invert_model = (ray.current_object_insides.top() == &object);
+
+        Intersection currentIntersection = object.surface->Intersect(ray, invert_model);
         if (currentIntersection &&
-            (!intersection || intersection.distance > currentIntersection.distance)) 
-			// if there is no yet any intersections found or this intersection is closer than the previous one
+            (!intersection || intersection.distance > currentIntersection.distance))
+            // if there is no yet any intersections found or this intersection is closer than the previous one
         {
-			// refresh the intersection data
+            // refresh the intersection data
             intersection = currentIntersection;
-            intersectedModel = &model;
+            intersected_object = &object;
         }
     }
 
+    // Set proper direction of the normal vector at the intersection point
+    if (glm::dot(ray.direction, intersection.normal) > 0.0) 
+        intersection.normal = -intersection.normal;
+
+    // If no intersections occured, return default color
     dvec3 color = backgroundColor;
     if (!intersection)
         return color;
 
-	// Calculate basic color
-	// using Phong model
-    for (auto& light : scene->lights)
+    // Push the intersected object to the stack if the ray went inside it
+    // or pop the intersected object from the stack if the ray went outside of it
+    bool outside = (ray.current_object_insides.top() == intersected_object);
+    Object3D* prevous_object = ray.current_object_insides.top();
+    Object3D* current_object;
+
+    std::stack<Object3D*> new_object_insides = ray.current_object_insides;
+    if (intersected_object->surface)
     {
-		// Diffuse shading
-        color += intersectedModel->material->DiffuseColor(intersection, light);
-		// Specular shading
-        color += intersectedModel->material->SpecularColor(ray, intersection, light);
+        if (outside)
+        {
+            new_object_insides.pop();
+        }
+        else
+        {
+            new_object_insides.push(intersected_object);
+        }
     }
 
-    double k = intersectedModel->material->refractive_index;
-    if (intersection.face_side < 0) k = 1.0 / k;
-    double R = intersectedModel->material->FrenselReflectance(
-        normalizeDot(-ray.direction, intersection.normal)
-        );
-    double T = 1.0 - R;
+	// Calculate color by summing intensities from all light sources 
+    if (intersection.material)
+    {
+        for (auto& light : scene->lights)
+        {
+            color += intersection.material->Color(
+                intersection.normal, intersection.coord, 
+                ray.direction, light
+                );
+        }
+    }
 
-    dvec3 reflective_color = intersectedModel->material->refractive_color * R +
-        intersectedModel->material->reflective_color;
-    dvec3 refractive_color = intersectedModel->material->refractive_color * T;
+    double relative_refractive_index = 1.0;
+    double R = 0.0, T = 0.0;
+
+    if (new_object_insides.top()->material)
+    {
+        relative_refractive_index =
+            new_object_insides.top()->material->refractive_index /
+            ray.current_object_insides.top()->material->refractive_index;
+        R = FrenselReflectance(
+            normalizeDot(-ray.direction, intersection.normal),
+            relative_refractive_index
+            );
+        T = 1.0 - R;
+    }
+
+    dvec3 reflective_color = intersection.material->transparency_color * R +
+        intersection.material->reflective_color;
+    dvec3 transparency_color = intersection.material->transparency_color * T;
 
 	// If reflectance effect on the resulting pixel is sufficient,
 	// trace the reflected ray further
@@ -65,20 +104,22 @@ glm::dvec3 RayTracer::TraceRay(Ray ray, int step = 0)
         Ray reflected; // reflected ray
         reflected.direction = glm::reflect(ray.direction, intersection.normal);
         reflected.origin = intersection.coord;
+        reflected.current_object_insides = ray.current_object_insides;
 
         color += reflective_color * TraceRay(reflected, step + 1);
     }
 
     // If transparency effect on the resulting pixel is sufficient,
     // trace the refracted ray further
-    if (glm::length(refractive_color) > TRACER_EPSILON)
+    if (glm::length(transparency_color) > TRACER_EPSILON)
     {
         Ray refracted; // refracted ray
 
-        refracted.direction = glm::refract(ray.direction, intersection.normal, k);
+        refracted.direction = glm::refract(ray.direction, intersection.normal, relative_refractive_index);
         refracted.origin = intersection.coord;
+        std::swap(refracted.current_object_insides, new_object_insides);
 
-        color += refractive_color * TraceRay(refracted, step + 1);
+        color += transparency_color * TraceRay(refracted, step + 1);
     }
 
     return color;

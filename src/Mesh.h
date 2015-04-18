@@ -10,6 +10,7 @@
 #include "glm\ext.hpp"
 #include "Types.h"
 #include "Object3D.h"
+#include "BasicSurfaces.h"
 #include "L3DS\l3ds.h"
 #include <vector>
 #include <memory>
@@ -58,12 +59,12 @@ struct MeshOctreeNode
         }
         triangles.push_back(poly);
     }
-    Intersection Intersect(const Ray& ray, const BoundingBox& bounding_box)
+    Intersection Intersect(const Ray& ray, const BoundingBox& bounding_box, bool inverted)
     {
         Intersection intersection;
         for (const auto& poly : triangles)
         {
-            auto current_intersection = poly.Intersect(ray);
+            auto current_intersection = poly.Intersect(ray, inverted);
             if (current_intersection && current_intersection.distance >= TRACER_EPSILON)
             {
                 if (!intersection || current_intersection.distance < intersection.distance)
@@ -86,7 +87,7 @@ struct MeshOctreeNode
             }
             if (subbox.Intersect(ray))
             {
-                auto current_intersection = subtrees[i].Intersect(ray, subbox);
+                auto current_intersection = subtrees[i].Intersect(ray, subbox, inverted);
                 if (current_intersection)
                 {
                     if (!intersection || current_intersection.distance < intersection.distance)
@@ -102,17 +103,17 @@ struct MeshOctreeNode
 };
 
 // 3D mesh of polygonal object
-class Mesh : public Object3D
+class Mesh : public Surface
 {
 public:
     // Load mesh from .3ds
     bool LoadFromFile(const std::string& filename, int mesh_name = 0);
 
-    Intersection Intersect(const Ray& ray) const
+    Intersection Intersect(const Ray& ray, bool inverted = false) const override
     {
         if (!bounding_box.Intersect(ray))
             return Intersection();
-        return root_node->Intersect(ray, bounding_box);
+        return root_node->Intersect(ray, bounding_box, inverted);
     }
 
 	Mesh() {};

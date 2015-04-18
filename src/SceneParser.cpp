@@ -5,9 +5,10 @@ void SceneParser::Parse(const std::string& arg_filename, Scene* arg_scene)
     fin.open(arg_filename);
     scene = arg_scene;
 
-    scene->meshes["sphere"] = std::make_unique<Sphere>();
-    scene->meshes["plane"] = std::make_unique<Plane>();
-    scene->materials["default"] = std::make_unique<Material>();
+    scene->surfaces["sphere"] = std::make_unique<Sphere>();
+    scene->surfaces["plane"] = std::make_unique<Plane>();
+    scene->surface_materials["default"] = std::make_unique<SurfaceMaterial>();
+    scene->inside_materials["default"] = std::make_unique<InsideMaterial>();
 
     while (fin)
     {
@@ -21,18 +22,21 @@ void SceneParser::ParseEntity()
     fin >> entity_name;
     if (entity_name.empty())
         return;
-    Material material;
-    if (entity_name == "Material")
+    if (entity_name == "SurfaceMaterial")
     {
-        ParseMaterial();
+        ParseSurfaceMaterial();
+    }
+    else if (entity_name == "InsideMaterial")
+    {
+        ParseInsideMaterial();
     }
     else if (entity_name == "Mesh")
     {
         ParseMesh();
     }
-    else if (entity_name == "Model")
+    else if (entity_name == "Object")
     {
-        ParseModel();
+        ParseObject();
     }
     else if (entity_name == "Light")
     {
@@ -51,9 +55,9 @@ glm::dvec3 SceneParser::ParseVec()
     return vec;
 }
 
-void SceneParser::ParseMaterial()
+void SceneParser::ParseSurfaceMaterial()
 {
-    Material* m = new Material;
+    SurfaceMaterial* m = new SurfaceMaterial;
     std::string material_name;
     fin >> material_name;
 
@@ -70,7 +74,7 @@ void SceneParser::ParseMaterial()
         fin >> left;
         if (left == "}")
         {
-            scene->materials[material_name] = std::unique_ptr<Material>(m);
+            scene->surface_materials[material_name] = std::unique_ptr<SurfaceMaterial>(m);
             return;
         }
 
@@ -93,11 +97,49 @@ void SceneParser::ParseMaterial()
         else if (left == "reflective_color") {
             m->reflective_color = ParseVec();
         }
-        else if (left == "refractive_index") {
-            fin >> m->refractive_index;
+        else if (left == "transparency_color") {
+            m->transparency_color = ParseVec();
         }
-        else if (left == "refractive_color") {
-            m->refractive_color = ParseVec();
+        else {
+            delete m;
+            throw SyntaxError(std::string("Wrong material parameter: ") + left);
+        }
+    }
+    throw SyntaxError("Closed bracket '}' not found");
+}
+
+void SceneParser::ParseInsideMaterial()
+{
+    InsideMaterial* m = new InsideMaterial;
+    std::string material_name;
+    fin >> material_name;
+
+    std::string str;
+    fin >> str;
+    if (str != "{")
+    {
+        delete m;
+        throw SyntaxError("Open bracket '{' expected");
+    }
+    while (fin)
+    {
+        std::string left;
+        fin >> left;
+        if (left == "}")
+        {
+            scene->inside_materials[material_name] = std::unique_ptr<InsideMaterial>(m);
+            return;
+        }
+
+        fin >> str;
+        if (str != "=")
+        {
+            delete m;
+            throw SyntaxError("Expression divided by '=' is expected");
+        }
+
+        if (left == "refractive_index") {
+            fin >> m->refractive_index;
         }
         else {
             delete m;
@@ -126,7 +168,7 @@ void SceneParser::ParseMesh()
         fin >> left;
         if (left == "}")
         {
-            scene->meshes[mesh_name] = std::unique_ptr<Mesh>(m);
+            scene->surfaces[mesh_name] = std::unique_ptr<Mesh>(m);
             return;
         }
 
@@ -152,10 +194,11 @@ void SceneParser::ParseMesh()
     throw SyntaxError("Closed bracket '}' not found");
 }
 
-void SceneParser::ParseModel()
+void SceneParser::ParseObject()
 {
-    Model m;
-    m.material = scene->materials["default"].get();
+    auto m = std::make_unique<Model>();
+    Object3D obj;
+    m->surface_material = scene->surface_materials["default"].get();
 
     std::string str;
     fin >> str;
@@ -169,6 +212,8 @@ void SceneParser::ParseModel()
         fin >> left;
         if (left == "}")
         {
+            obj.surface = m.get();
+            scene->objects.push_back(obj);
             scene->models.emplace_back(std::move(m));
             return;
         }
@@ -180,27 +225,34 @@ void SceneParser::ParseModel()
         }
 
         if (left == "position") {
-            m.position = ParseVec();
+            m->SetPosition(ParseVec());
         }
         else if (left == "orientation") {
-            m.orientation = ParseVec();
+            m->SetOrientation(ParseVec());
         }
         else if (left == "scale") {
-            m.scale = ParseVec();
+            m->SetScale(ParseVec());
         }
-        else if (left == "object") {
+        else if (left == "surface") {
             std::string obj_name;
             fin >> obj_name;
-            if (scene->meshes.find(obj_name) == scene->meshes.end())
-                throw SyntaxError("No mesh named" + obj_name + "found");
-            m.object = scene->meshes[obj_name].get();
+            if (scene->surfaces.find(obj_name) == scene->surfaces.end())
+                throw SyntaxError("No surface named" + obj_name + "found");
+            m->surface = scene->surfaces[obj_name].get();
         }
-        else if (left == "material") {
+        else if (left == "surface_material") {
             std::string material_name;
             fin >> material_name;
-            if (scene->materials.find(material_name) == scene->materials.end())
+            if (scene->surface_materials.find(material_name) == scene->surface_materials.end())
                 throw SyntaxError("No material named" + material_name + "found");
-            m.material = scene->materials[material_name].get();
+            m->surface_material = scene->surface_materials[material_name].get();
+        }
+        else if (left == "inside_material") {
+            std::string material_name;
+            fin >> material_name;
+            if (scene->inside_materials.find(material_name) == scene->inside_materials.end())
+                throw SyntaxError("No material named" + material_name + "found");
+            obj.material = scene->inside_materials[material_name].get();
         }
         else {
             throw SyntaxError(std::string("Wrong mesh parameter: ") + left);
@@ -211,7 +263,7 @@ void SceneParser::ParseModel()
 
 void SceneParser::ParseLight()
 {
-    Light light;
+    PointLight light;
 
     std::string str;
     fin >> str;

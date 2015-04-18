@@ -1,181 +1,132 @@
 #pragma once
 
 /*
-    Mesh.h
-    Defines several classes of 3D shapes
+    Object3D.h
+    Defines base classes for 3D entities
     Author: Artyom Bishev
 */
 
 #include "Types.h"
 #include "Material.h"
 
-/*
-    Base class for any renderable 3D shape in scene
-*/
-class Object3D
+
+// Contains all neccessary information about ray-object intersection
+struct Intersection
 {
-public:
-    Object3D() {}
-    virtual Intersection Intersect(const Ray& ray) const = 0;
-    virtual ~Object3D() {};
-};
-
-
-
-/*
-    Basic analytic shapes
-*/
-
-// Sphere
-class Sphere : public Object3D
-{
-public:
-    Sphere() {}
-    virtual Intersection Intersect(const Ray& ray) const;
-    virtual ~Sphere() {}
-};
-
-// Plane
-class Plane : public  Object3D
-{
-public:
-    Plane() {}
-    virtual Intersection Intersect(const Ray& ray) const;
-    virtual ~Plane() {}
-};
-
-// This function implements Muller-Trumbore algorithm 
-// for finding ray-triangle intersections
-inline Intersection IntersectTriangle(const Ray& ray,
-    glm::dvec3 x, glm::dvec3 y, glm::dvec3 z, // coordinates
-    glm::dvec3 nx, glm::dvec3 ny, glm::dvec3 nz // normals
-    )
-{
-    glm::dvec3 edge[2];
-    edge[0] = x - z;
-    edge[1] = y - z;
-    glm::dvec3 P, Q, T;
-    double det, inv_det, u, v;
-
-    P = glm::cross(ray.direction, edge[1]);
-    det = glm::dot(edge[0], P);
-    if (det > -0.01 && det < 0.01)
-        return Intersection();
-    inv_det = 1.0 / det;
-
-    T = ray.origin - z;
-    u = glm::dot(T, P) * inv_det;
-    if (u < 0.0 || u > 1.0)
+    bool is_intersected = false;
+    glm::dvec3 coord;
+    glm::dvec3 normal;
+    const SurfaceMaterial* material = nullptr;
+    double distance;
+    operator bool() const
     {
-        return Intersection();
-    }
-
-    Q = glm::cross(T, edge[0]);
-
-    double t = inv_det * glm::dot(Q, edge[1]);
-    if (t < 0.0)
-        return Intersection();
-
-    v = glm::dot(ray.direction, Q) * inv_det;
-    if (v < 0.0 || u + v > 1.0)
-    {
-        return Intersection();
-    }
-
-    Intersection intersection;
-    intersection.coord =
-        x * u +
-        y * v +
-        z * (1.0 - u - v);
-
-    intersection.normal = glm::normalize(
-        nx * u +
-        ny * v +
-        nz * (1.0 - u - v)
-        );
-
-    intersection.is_intersected = true;
-    intersection.distance = glm::length2(intersection.coord - ray.origin);
-    return intersection;
-}
-
-// Triangle (or polygon)
-class Poly : public Object3D
-{
-public:
-    glm::dvec3 vertices[3];
-    glm::dvec3 normals[3];
-    Intersection Intersect(const Ray& ray) const
-    {
-        return ::IntersectTriangle(ray,
-            vertices[0], vertices[1], vertices[2],
-            normals[0], normals[1], normals[2]
-            );
+        return is_intersected;
     }
 };
 
 
 /*
-    3D model with specified location and orientation and specified material
-    Stores a pointer to the corresponding 3D shape
+    Base class for any intersectable 3D shape in scene
 */
-struct Model
+class Surface
 {
-    const Object3D* object;
+public:
+    Surface() {}
+    virtual Intersection Intersect(const Ray& ray, bool inverted = false) const = 0;
+    virtual ~Surface() {};
+};
+
+
+/*
+    3D surface with the specified location, scale and orientation and the specified surface material
+    Stores a pointer to the corresponding 3D shape in local coordinate space
+*/
+class Model : public Surface
+{
+public:
+    const Surface* surface; // contained surface
+    const SurfaceMaterial* surface_material; // material of this surface
+    bool inverted = false; // true if the object is turned inside out (So, it describes CSG NOT operation)
+
+    // Calculate intersection
+    Intersection Intersect(const Ray& ray, bool inverted = false) const override;
+
+    // Getters & setters
+    glm::dmat3 GetModelMatrix() const
+    {
+        return model_matrix;
+    }
+    glm::dmat3 GetModelMatrixInverse() const
+    {
+        return model_matrix_inverse;
+    }
+    glm::dmat3 GetNormalMatrix() const
+    {
+        return model_matrix_inverse_transpose;
+    }
+    const glm::dvec3& GetPosition()
+    {
+        return position;
+    }
+    const glm::dvec3& GetOrientation()
+    {
+        return orientation;
+    }
+    const glm::dvec3& GetScale()
+    {
+        return scale;
+    }
+    void SetPosition(const glm::dvec3& new_position)
+    {
+        position = new_position;
+        RenewMatrices();
+    }
+    void SetOrientation(const glm::dvec3& new_orientation)
+    {
+        orientation = new_orientation;
+        RenewMatrices();
+    }
+    void SetScale(const glm::dvec3& new_scale)
+    {
+        scale = new_scale;
+        RenewMatrices();
+    }
+
+private:
+    glm::dmat3 model_matrix;
+    glm::dmat3 model_matrix_inverse;
+    glm::dmat3 model_matrix_inverse_transpose;
 
     glm::dvec3 position;
     glm::dvec3 orientation;
     glm::dvec3 scale;
 
-    Material* material;
-
-    // Get model matrix
-    glm::dmat3 GetModelMatrix() const
+    void RenewMatrices()
     {
-        glm::dmat4 model_matrix = glm::dmat4(1.0f);
+        glm::dmat4 model_mat4 = glm::dmat4(1.0f);
         for (int k = 0; k < 3; k++)
         {
             glm::dvec3 axis(0.0f);
             axis[k] = 1.0f;
-            model_matrix = glm::rotate(model_matrix, orientation[k], axis);
+            model_mat4 = glm::rotate(model_mat4, orientation[k], axis);
         }
-        model_matrix = glm::scale(model_matrix, scale);
-        return glm::dmat3(model_matrix);
+        model_mat4 = glm::scale(model_mat4, scale);
+        model_matrix = glm::dmat3(model_mat4);
+        model_matrix_inverse = glm::inverse(model_matrix);
+        model_matrix_inverse_transpose = glm::inverseTranspose(model_matrix);
     }
+};
 
-    // Calculate intersection
-    Intersection Intersect(const Ray& ray) const
-    {
-        if (!object)
-            return Intersection();
 
-        // Calculate the matrices
-        glm::dmat3 model_matrix = GetModelMatrix();
-        glm::dmat3 model_matrix_inverse = glm::inverse(model_matrix);
-        glm::dmat3 model_matrix_inverse_transpose = glm::inverseTranspose(model_matrix);
-
-        // Calc intersection in the local space
-        Ray localRay;
-        localRay.direction = model_matrix_inverse * ray.direction;
-        localRay.origin = model_matrix_inverse * (ray.origin - position);
-        Intersection intersection = object->Intersect(localRay);
-        if (!intersection) return intersection;
-
-        // Transform intersection data to the global space
-        intersection.coord = model_matrix * intersection.coord + position;
-        intersection.normal = glm::normalize(model_matrix_inverse_transpose * intersection.normal);
-        intersection.distance = glm::length2(intersection.coord - ray.origin);
-
-        // If the intersection is too close to the ray origin, discard it
-        if (intersection.distance < TRACER_EPSILON)
-            return Intersection();
-        // Set proper side of the intersected surface
-        if (glm::dot(ray.direction, intersection.normal) > 0.0)
-        {
-            intersection.face_side = -intersection.face_side;
-            intersection.normal = -intersection.normal;
-        }
-
-        return intersection;
-    }
+/*
+    3D object
+    Describes the surface plus the area inside
+    It is assumed, that one object can only lie entirely inside another one, 
+    or totally separate from the others.
+*/
+class Object3D
+{
+public:
+    Surface* surface = nullptr;
+    InsideMaterial* material = nullptr;
 };

@@ -50,4 +50,8 @@ public:
 
     int maxRenderStep = 10;  // Maximal tracing deepness
     glm::dvec3 backgroundColor; // Default color (is set when no intersections were found)
+
+private:
+    InsideMaterial void_material;
+
 };

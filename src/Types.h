@@ -8,23 +8,14 @@
 
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
-#include "vector"
+#include <vector>
+#include <stack>
 
 #define TRACER_EPSILON 0.0000004
 
-struct Intersection
-{
-    bool is_intersected = false;
-    glm::dvec3 coord;
-    glm::dvec3 normal;
-    int face_side = 1;
-    double distance;
-    operator bool() const
-    {
-        return is_intersected;
-    }
-};
+class Object3D;
 
+// Ray
 struct Ray
 {
     Ray() {}
@@ -33,6 +24,8 @@ struct Ray
 
     glm::dvec3 origin;
     glm::dvec3 direction;
+
+    std::stack<Object3D*> current_object_insides;
 };
 
 struct Camera
@@ -55,9 +48,9 @@ struct Camera
     double viewAngle = 3.14f / 3.0f;    // View angles (radians)
 };
 
-struct Light
+struct PointLight
 {
-    Light(glm::dvec3 _center = glm::dvec3(), glm::dvec3 _color = glm::dvec3())
+    PointLight(glm::dvec3 _center = glm::dvec3(), glm::dvec3 _color = glm::dvec3())
         : center(_center), color(_color) {}
     glm::dvec3 center;
     glm::dvec3 color;

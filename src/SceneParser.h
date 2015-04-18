@@ -42,11 +42,13 @@ private:
 
     glm::dvec3 ParseVec();
 
-    void ParseMaterial();
+    void ParseInsideMaterial();
+
+    void ParseSurfaceMaterial();
 
     void ParseMesh();
 
-    void ParseModel();
+    void ParseObject();
 
     void ParseLight();
 };

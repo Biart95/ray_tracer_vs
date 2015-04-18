@@ -8,27 +8,27 @@ Mesh dolphin
     filename = dolphin.3ds 2
 }
 
-Material diffuse_white
+SurfaceMaterial diffuse_white
 {
     diffuse = 0.9 0.9 0.9
 }
 
-Material diffuse_green
+SurfaceMaterial diffuse_green
 {
     diffuse = 0.2 1.0 0.2
 }
 
-Material diffuse_yellow
+SurfaceMaterial diffuse_yellow
 {
     diffuse = 0.7 0.7 0.2
 }
 
-Material diffuse_orange
+SurfaceMaterial diffuse_orange
 {
     diffuse = 0.9 0.5 0.2
 }
 
-Material plastic_red
+SurfaceMaterial plastic_red
 {
     diffuse = 0.8 0.1 0.1
     specular = 10.0 10.0 10.0
@@ -36,7 +36,7 @@ Material plastic_red
     reflective_color = 0.1 0.1 0.1
 }
 
-Material plastic_purple
+SurfaceMaterial plastic_purple
 {
     diffuse = 0.6 0.1 0.6
     specular = 10.0 10.0 10.0
@@ -44,7 +44,7 @@ Material plastic_purple
     reflective_color = 0.1 0.1 0.1
 }
 
-Material plastic_blue
+SurfaceMaterial plastic_blue
 {
     diffuse = 0.1 0.1 0.8
     specular = 10.0 10.0 10.0
@@ -52,7 +52,7 @@ Material plastic_blue
     reflective_color = 0.1 0.1 0.1
 }
 
-Material metal
+SurfaceMaterial metal
 {
     diffuse = 0.05 0.05 0.05
     specular = 0.5 0.5 0.5
@@ -60,130 +60,146 @@ Material metal
     reflective_color = 0.8 0.8 0.8
 }
 
-Material glass
+SurfaceMaterial glass
 {
     specular = 3.0 3.0 3.0
     shininess = 1000.0
-    refractive_index = 0.7
-    refractive_color = 0.96 0.96 0.99
+    transparency_color = 0.96 0.96 0.99
 }
 
-Model
+InsideMaterial glass
 {
-    object = teapot
+    refractive_index = 0.7
+}
+
+Object
+{
+    surface = teapot
     scale = 0.06 0.06 0.06
     position = -1.0 -0.05 8.0
     orientation = -90.0 0.0 0.0
-    material = metal
+    surface_material = metal
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
     scale = 1.0 1.0 1.0
     position = -1.0 -2.0 8.0
-    material = metal
+    surface_material = metal
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
     scale = 0.5 0.5 0.5
     position = -1.0 -0.5 8.0
-    material = diffuse_white
+    surface_material = diffuse_white
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
     scale = 0.5 0.5 0.5
     position = 2.0 -1.5 8.0
-    material = plastic_red
+    surface_material = plastic_red
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
     scale = 0.4 0.4 0.4
     position = 2.0 -0.6 8.0
-    material = plastic_purple
+    surface_material = plastic_purple
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
     scale = 0.3 0.3 0.3
     position = 2.0 0.1 8.0
-    material = plastic_blue
+    surface_material = plastic_blue
 }
 
-Model
+Object
 {
-    object = plane
+    surface = plane
     scale = 6.0 4.0 1.0
     position = 0.0 0.0 10.0
     orientation = 0.0 0.0 0.0
-    material = diffuse_yellow
+    surface_material = diffuse_yellow
 }
 
-Model
+Object
 {
-    object = plane
+    surface = plane
     scale = 12.0 4.0 1.0
     position = -3.0 0.0 4.0
     orientation = 0.0 -90.0 0.0
-    material = diffuse_green
+    surface_material = diffuse_green
 }
 
-Model
+Object
 {
-    object = plane
+    surface = plane
     scale = 12.0 4.0 1.0
     position = 3.0 0.0 4.0
     orientation = 0.0 90.0 0.0
-    material = diffuse_orange
+    surface_material = diffuse_orange
 }
 
-Model
+Object
 {
-    object = plane
+    surface = plane
     scale = 6.0 12.0 1.0
     position = 0.0 -2.0 4.0
     orientation = 90.0 0.0 0.0
-    material = metal
+    surface_material = metal
 }
 
-Model
+Object
 {
-    object = plane
+    surface = plane
     scale = 6.0 12.0 1.0
     position = 0.0 2.0 4.0
     orientation = -90.0 0.0 0.0
-    material = diffuse_white
+    surface_material = diffuse_white
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
     scale = 0.5 0.5 0.5
     position = 0.5 -1.5 5.0
-    material = glass
+    surface_material = glass
+    inside_material = glass
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
+    scale = 0.3 0.3 0.3
+    position = 0.5 -1.5 5.0
+    surface_material = glass
+    inside_material = default
+}
+
+Object
+{
+    surface = sphere
     scale = 0.3 0.3 0.3
     position = 0.5 -0.7 5.0
-    material = glass
+    surface_material = glass
+    inside_material = glass
 }
 
-Model
+Object
 {
-    object = sphere
+    surface = sphere
     scale = 0.2 0.2 0.2
     position = 0.5 -0.2 5.0
-    material = glass
+    surface_material = glass
+    inside_material = glass
 }
 
 Light
